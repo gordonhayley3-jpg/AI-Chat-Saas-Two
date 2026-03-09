@@ -63,6 +63,26 @@
     --radius: 0.75rem;
   }
 
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 252 15% 10%;
+    --card: 252 22% 98%;
+    --card-foreground: 252 15% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 252 15% 10%;
+    --primary: 257 93% 68%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 252 18% 94%;
+    --secondary-foreground: 257 60% 30%;
+    --muted: 252 18% 96%;
+    --muted-foreground: 252 10% 45%;
+    --accent: 257 75% 73%;
+    --accent-foreground: 257 60% 20%;
+    --border: 252 18% 90%;
+    --input: 252 18% 92%;
+    --ring: 257 93% 68%;
+  }
+
   * {
     border-color: hsl(var(--border));
   }
@@ -95,6 +115,43 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(252 18% 28%);
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.3);
+  }
+
+  /* Prose overrides */
+  .prose {
+    --tw-prose-body: hsl(var(--foreground) / 0.9);
+    --tw-prose-headings: hsl(var(--foreground));
+    --tw-prose-links: hsl(var(--primary));
+    --tw-prose-bold: hsl(var(--foreground));
+    --tw-prose-counters: hsl(var(--muted-foreground));
+    --tw-prose-bullets: hsl(var(--primary) / 0.5);
+    --tw-prose-quotes: hsl(var(--muted-foreground));
+    --tw-prose-quote-borders: hsl(var(--primary) / 0.3);
+    --tw-prose-captions: hsl(var(--muted-foreground));
+    --tw-prose-code: hsl(var(--primary));
+    --tw-prose-pre-code: hsl(var(--foreground));
+    --tw-prose-pre-bg: transparent;
+    --tw-prose-th-borders: hsl(var(--border));
+    --tw-prose-td-borders: hsl(var(--border) / 0.5);
   }
 }
 
@@ -178,50 +235,51 @@
 
 /* Glass effect */
 .glass {
-  background: hsl(252 22% 11% / 0.8);
+  background: hsl(var(--card) / 0.8);
   backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+.glass-dark {
+  background: hsl(252 22% 11% / 0.8);
+  backdrop-filter: blur(16px);
   border: 1px solid hsl(252 18% 20% / 0.6);
 }
 
-/* Glow button */
-.btn-glow {
-  background: var(--gradient-primary);
-  box-shadow: var(--shadow-glow-sm);
+.premium-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.1);
   transition: var(--transition-smooth);
 }
-.btn-glow:hover {
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-1px);
-}
-.btn-glow:active {
-  transform: translateY(0);
+
+.premium-card:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.2);
 }
 
-/* Token badge */
-.token-badge {
-  background: linear-gradient(135deg, hsl(257 93% 68% / 0.15), hsl(280 75% 65% / 0.15));
-  border: 1px solid hsl(257 93% 68% / 0.3);
+/* Floating input card */
+.chat-input-container {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3);
+  border-radius: 1.5rem;
 }
 
-/* Animated border beam */
-.border-beam::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(90deg, transparent, hsl(257 93% 68%), hsl(280 75% 65%), transparent);
-  background-size: 200% 100%;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: beam-move 3s linear infinite;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
+/* Gradient highlights */
+.gradient-highlight {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.2), transparent);
 }
-.border-beam:hover::before {
-  opacity: 1;
+
+/* Custom animations */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Code block */

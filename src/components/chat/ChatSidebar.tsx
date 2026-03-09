@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, MessageSquare, Trash2, Edit2, Check, X, Sparkles, LayoutDashboard, Settings, LogOut, Shield } from 'lucide-react'
+import { Plus, Search, MessageSquare, Trash2, Edit2, Check, X, Sparkles, LayoutDashboard, Settings, LogOut, Shield, FileText, Wrench, CreditCard, ChevronLeft, ChevronRight, Menu } from 'lucide-react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import type { Chat } from '../../types'
 import { formatDate } from '../../lib/utils'
@@ -14,9 +14,11 @@ interface ChatSidebarProps {
   onDeleteChat: (chatId: string) => void
   onRenameChat: (chatId: string, title: string) => void
   tokenBalance: number
+  isOpen: boolean
+  onToggle: () => void
 }
 
-export default function ChatSidebar({ chats, activeChatId, onNewChat, onSelectChat, onDeleteChat, onRenameChat, tokenBalance }: ChatSidebarProps) {
+export default function ChatSidebar({ chats, activeChatId, onNewChat, onSelectChat, onDeleteChat, onRenameChat, tokenBalance, isOpen, onToggle }: ChatSidebarProps) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -24,17 +26,6 @@ export default function ChatSidebar({ chats, activeChatId, onNewChat, onSelectCh
   const [editTitle, setEditTitle] = useState('')
 
   const filtered = chats.filter(c => c.title.toLowerCase().includes(search.toLowerCase()))
-
-  const today = filtered.filter(c => {
-    const d = new Date(c.updatedAt)
-    const now = new Date()
-    return d.toDateString() === now.toDateString()
-  })
-  const older = filtered.filter(c => {
-    const d = new Date(c.updatedAt)
-    const now = new Date()
-    return d.toDateString() !== now.toDateString()
-  })
 
   const handleSignOut = async () => {
     await signOut()
@@ -55,127 +46,126 @@ export default function ChatSidebar({ chats, activeChatId, onNewChat, onSelectCh
   }
 
   return (
-    <aside className="w-64 h-screen flex flex-col" style={{ background: 'hsl(var(--sidebar))' }}>
-      {/* Logo */}
-      <div className="h-14 flex items-center px-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg btn-glow flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-white" />
+    <>
+      {/* Mobile Backdrop */}
+      {!isOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity duration-300"
+          onClick={onToggle}
+        />
+      )}
+
+      <aside 
+        className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 transform ${
+          isOpen ? 'w-64 translate-x-0' : '-translate-x-full lg:w-0 lg:overflow-hidden'
+        }`}
+        style={{ background: 'hsl(var(--sidebar))' }}
+      >
+        {/* Logo Section */}
+        <div className="h-16 flex items-center justify-between px-4 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg btn-glow flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-base tracking-tight">NexusAI</span>
           </div>
-          <span className="font-semibold text-sm">NexusAI</span>
+          <button 
+            onClick={onToggle}
+            className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
-      </div>
 
-      {/* New chat */}
-      <div className="px-3 py-3">
-        <button
-          onClick={onNewChat}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary font-medium text-sm transition-all group"
-        >
-          <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
-          New chat
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="px-3 mb-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search chats..."
-            className="w-full pl-8 pr-3 py-2 rounded-lg bg-secondary border border-border text-xs outline-none focus:border-primary/40 transition-colors"
-          />
+        {/* New chat button */}
+        <div className="px-4 py-2">
+          <button
+            onClick={onNewChat}
+            className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-all group border border-primary/20"
+          >
+            <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
+            New chat
+          </button>
         </div>
-      </div>
 
-      {/* Chat list */}
-      <div className="flex-1 overflow-y-auto px-2">
-        {today.length > 0 && (
-          <div className="mb-2">
-            <div className="px-2 py-1 text-xs text-muted-foreground font-medium">Today</div>
-            {today.map(chat => (
-              <ChatRow
-                key={chat.id}
-                chat={chat}
-                active={activeChatId === chat.id}
-                editing={editingId === chat.id}
-                editTitle={editTitle}
-                onSelect={() => onSelectChat(chat.id)}
-                onDelete={() => onDeleteChat(chat.id)}
-                onStartEdit={() => startEdit(chat)}
-                onConfirmEdit={confirmEdit}
-                onCancelEdit={() => setEditingId(null)}
-                onEditChange={setEditTitle}
-              />
-            ))}
-          </div>
-        )}
-        {older.length > 0 && (
-          <div className="mb-2">
-            <div className="px-2 py-1 text-xs text-muted-foreground font-medium">Earlier</div>
-            {older.map(chat => (
-              <ChatRow
-                key={chat.id}
-                chat={chat}
-                active={activeChatId === chat.id}
-                editing={editingId === chat.id}
-                editTitle={editTitle}
-                onSelect={() => onSelectChat(chat.id)}
-                onDelete={() => onDeleteChat(chat.id)}
-                onStartEdit={() => startEdit(chat)}
-                onConfirmEdit={confirmEdit}
-                onCancelEdit={() => setEditingId(null)}
-                onEditChange={setEditTitle}
-              />
-            ))}
-          </div>
-        )}
-        {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-            <MessageSquare className="w-8 h-8 text-muted-foreground mb-2 opacity-50" />
-            <p className="text-xs text-muted-foreground">{search ? 'No chats found' : 'No chats yet. Start a new one!'}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom */}
-      <div className="border-t border-border p-3 space-y-1">
-        {/* Token balance */}
-        <div className="token-badge rounded-xl px-3 py-2.5 flex items-center justify-between mb-2">
-          <div>
-            <div className="text-xs text-muted-foreground">Token balance</div>
-            <div className="text-sm font-semibold text-primary">{tokenBalance.toLocaleString()}</div>
-          </div>
-          <Link to="/dashboard" className="text-xs text-primary hover:underline">Buy more</Link>
-        </div>
-        <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <LayoutDashboard className="w-4 h-4" />
-          Dashboard
-        </Link>
-        {user?.role === 'admin' && (
-          <Link to="/admin" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <Shield className="w-4 h-4" />
-            Admin
+        {/* Navigation Items */}
+        <div className="px-2 mt-4 space-y-1">
+          <Link 
+            to="/chat"
+            className="flex items-center gap-3 px-3 py-2 rounded-xl bg-secondary/50 text-foreground font-medium text-sm transition-all"
+          >
+            <MessageSquare className="w-4 h-4 text-primary" />
+            My Chats
           </Link>
-        )}
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          Sign out
-        </button>
-        <div className="flex items-center gap-2 px-3 py-2">
-          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
-            {user?.email?.[0]?.toUpperCase() || 'U'}
-          </div>
-          <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground font-medium text-sm transition-all">
+            <FileText className="w-4 h-4" />
+            My Files
+          </button>
+          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground font-medium text-sm transition-all">
+            <Wrench className="w-4 h-4" />
+            AI Tools
+          </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Chat History List */}
+        <div className="flex-1 overflow-y-auto mt-6 px-2 custom-scrollbar">
+          <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+            History
+          </div>
+          <div className="space-y-0.5">
+            {filtered.map(chat => (
+              <ChatRow
+                key={chat.id}
+                chat={chat}
+                active={activeChatId === chat.id}
+                editing={editingId === chat.id}
+                editTitle={editTitle}
+                onSelect={() => onSelectChat(chat.id)}
+                onDelete={() => onDeleteChat(chat.id)}
+                onStartEdit={() => startEdit(chat)}
+                onConfirmEdit={confirmEdit}
+                onCancelEdit={() => setEditingId(null)}
+                onEditChange={setEditTitle}
+              />
+            ))}
+            {filtered.length === 0 && (
+              <div className="py-8 text-center px-4">
+                <p className="text-xs text-muted-foreground opacity-60">No conversations yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="mt-auto border-t border-border/50 p-3 space-y-1.5">
+          <Link 
+            to="/dashboard" 
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary/5 hover:bg-primary/10 text-primary font-bold text-sm transition-all border border-primary/10 group"
+          >
+            <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            Pricing
+          </Link>
+          
+          <div className="flex items-center justify-between px-3 py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                {user?.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-semibold truncate text-foreground">Account</span>
+                <span className="text-[10px] text-muted-foreground truncate">{user?.email}</span>
+              </div>
+            </div>
+            <button 
+              onClick={handleSignOut}
+              className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   )
 }
 
@@ -185,9 +175,11 @@ function ChatRow({ chat, active, editing, editTitle, onSelect, onDelete, onStart
   onConfirmEdit: () => void; onCancelEdit: () => void; onEditChange: (v: string) => void
 }) {
   return (
-    <div className={`group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer text-sm transition-all mb-0.5 ${active ? 'bg-primary/15 text-foreground' : 'hover:bg-secondary text-muted-foreground hover:text-foreground'}`}>
+    <div className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-sm transition-all ${
+      active ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50 text-muted-foreground hover:text-foreground'
+    }`}>
       {editing ? (
-        <>
+        <div className="flex-1 flex items-center gap-1">
           <input
             autoFocus
             value={editTitle}
@@ -195,16 +187,20 @@ function ChatRow({ chat, active, editing, editTitle, onSelect, onDelete, onStart
             onKeyDown={e => { if (e.key === 'Enter') onConfirmEdit(); if (e.key === 'Escape') onCancelEdit() }}
             className="flex-1 bg-transparent outline-none text-sm text-foreground"
           />
-          <button onClick={onConfirmEdit} className="text-primary"><Check className="w-3 h-3" /></button>
-          <button onClick={onCancelEdit} className="text-muted-foreground"><X className="w-3 h-3" /></button>
-        </>
+          <button onClick={onConfirmEdit} className="p-1 hover:text-primary"><Check className="w-3 h-3" /></button>
+          <button onClick={onCancelEdit} className="p-1 hover:text-muted-foreground"><X className="w-3 h-3" /></button>
+        </div>
       ) : (
         <>
-          <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-60" />
+          <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary' : 'opacity-40'}`} />
           <span className="flex-1 truncate" onClick={onSelect}>{chat.title}</span>
           <div className="hidden group-hover:flex items-center gap-1">
-            <button onClick={e => { e.stopPropagation(); onStartEdit() }} className="p-0.5 hover:text-foreground transition-colors"><Edit2 className="w-3 h-3" /></button>
-            <button onClick={e => { e.stopPropagation(); onDelete() }} className="p-0.5 hover:text-destructive transition-colors"><Trash2 className="w-3 h-3" /></button>
+            <button onClick={e => { e.stopPropagation(); onStartEdit() }} className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-all">
+              <Edit2 className="w-3 h-3" />
+            </button>
+            <button onClick={e => { e.stopPropagation(); onDelete() }} className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-destructive transition-all">
+              <Trash2 className="w-3 h-3" />
+            </button>
           </div>
         </>
       )}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Sparkles, Zap, Code2, Globe, BookOpen } from 'lucide-react'
+import { Sparkles, Zap, Code2, Globe, BookOpen, Sun, Moon, Bell, ChevronDown, Check, Menu, X, Command } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import toast from 'react-hot-toast'
 import { blink } from '../blink/client'
 import { useAuth } from '../hooks/useAuth'
@@ -9,15 +10,18 @@ import ChatSidebar from '../components/chat/ChatSidebar'
 import MessageBubble from '../components/chat/MessageBubble'
 import ChatInput from '../components/chat/ChatInput'
 import TypingIndicator from '../components/chat/TypingIndicator'
-import type { Chat, Message } from '../types'
+import { AssistantGrid, ToolGrid } from '../components/chat/AssistantGrid'
+import type { Chat, Message, AIModel } from '../types'
 import { estimateTokens } from '../lib/utils'
-
-const STARTERS = [
-  { icon: Sparkles, text: 'Explain quantum computing in simple terms' },
-  { icon: Code2, text: 'Write a React hook for debouncing input' },
-  { icon: Globe, text: 'Summarize the latest trends in AI' },
-  { icon: BookOpen, text: 'Help me plan a study schedule for learning TypeScript' },
-]
+import { AI_MODELS, DEFAULT_MODEL_ID } from '../config/models'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '../components/ui/dropdown-menu'
 
 function mapChat(r: any): Chat {
   return { id: r.id, userId: r.user_id, title: r.title, createdAt: r.created_at, updatedAt: r.updated_at }
@@ -30,19 +34,21 @@ function mapMessage(r: any): Message {
 export default function ChatPage() {
   const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const { theme, setTheme } = useTheme()
   const { balance, fetchBalance, deductTokens } = useTokenBalance(user?.id)
+  
   const [chats, setChats] = useState<Chat[]>([])
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingContent, setStreamingContent] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [selectedModel, setSelectedModel] = useState<AIModel>(AI_MODELS.find(m => m.id === DEFAULT_MODEL_ID) || AI_MODELS[0])
+  
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate({ to: '/login' })
-    }
+    if (!authLoading && !user) navigate({ to: '/login' })
   }, [user, authLoading, navigate])
 
   useEffect(() => {
@@ -90,6 +96,7 @@ export default function ChatPage() {
     setActiveChatId(chatId)
     setStreamingContent('')
     loadMessages(chatId)
+    if (window.innerWidth < 1024) setSidebarOpen(false)
   }
 
   const handleDeleteChat = async (chatId: string) => {
@@ -115,16 +122,18 @@ export default function ChatPage() {
   const handleSend = useCallback(async (content: string) => {
     if (!user || isStreaming) return
 
-    const estimatedCost = estimateTokens(content) + 200
-    if ((balance?.tokens || 0) < estimatedCost) {
-      toast.error('Insufficient tokens. Please purchase more in the dashboard.')
+    // Token Calculation
+    const estInput = estimateTokens(content)
+    const costEstimate = (estInput * selectedModel.inputPrice) + 500 // padding for response
+    
+    if ((balance?.tokens || 0) < costEstimate) {
+      toast.error('Insufficient tokens. Please buy more.')
       return
     }
 
     const now = new Date().toISOString()
     let currentChatId = activeChatId
 
-    // Create new chat if needed
     if (!currentChatId) {
       try {
         const title = content.slice(0, 60) + (content.length > 60 ? '...' : '')
@@ -145,8 +154,7 @@ export default function ChatPage() {
     }
 
     // Save user message
-    const userTokens = estimateTokens(content)
-    let userMsg: Message
+    const userTokens = estInput * selectedModel.inputPrice
     try {
       const raw = await blink.db.table('messages').create({
         chat_id: currentChatId,
@@ -156,20 +164,19 @@ export default function ChatPage() {
         tokens_used: userTokens,
         created_at: now,
       }) as any
-      userMsg = mapMessage(raw)
-      setMessages(prev => [...prev, userMsg])
+      setMessages(prev => [...prev, mapMessage(raw)])
     } catch (err) {
-      toast.error('Failed to send message')
+      toast.error('Failed to send')
       return
     }
 
-    // Stream AI response
+    // Stream AI
     setIsStreaming(true)
     setStreamingContent('')
     let fullContent = ''
 
     try {
-      const context = messages.slice(-10).map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+      const context = messages.slice(-6).map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
       context.push({ role: 'user', content })
 
       await blink.ai.streamText(
@@ -177,11 +184,11 @@ export default function ChatPage() {
           messages: [
             {
               role: 'system' as const,
-              content: 'You are NexusAI, a brilliant and helpful AI assistant. Provide clear, accurate, and thoughtful responses. Use proper markdown formatting. For code, always use fenced code blocks with the language specified.',
+              content: 'You are NexusAI, a premium AI assistant. Provide expert, clear, and high-fidelity responses. Use markdown.',
             },
             ...context,
           ],
-          model: 'gpt-4.1-mini',
+          model: selectedModel.id as any,
         },
         (chunk: string) => {
           fullContent += chunk
@@ -189,9 +196,7 @@ export default function ChatPage() {
         }
       )
 
-      // Save AI message
-      const aiTokens = estimateTokens(fullContent)
-      const totalTokens = userTokens + aiTokens
+      const aiTokens = estimateTokens(fullContent) * selectedModel.outputPrice
       const aiMsgRaw = await blink.db.table('messages').create({
         chat_id: currentChatId,
         user_id: user.id,
@@ -200,141 +205,164 @@ export default function ChatPage() {
         tokens_used: aiTokens,
         created_at: new Date().toISOString(),
       }) as any
+      
       setMessages(prev => [...prev, mapMessage(aiMsgRaw)])
       setStreamingContent('')
-
-      // Deduct tokens
-      await deductTokens(totalTokens)
+      await deductTokens(userTokens + aiTokens)
       await fetchBalance()
-
-      // Update chat timestamp
       await blink.db.table('chats').update(currentChatId, { updated_at: new Date().toISOString() })
       setChats(prev => prev.map(c => c.id === currentChatId ? { ...c, updatedAt: new Date().toISOString() } : c))
 
     } catch (err: any) {
-      const isAuthError = err?.message?.includes('401') || err?.message?.includes('Unauthorized')
-      if (isAuthError) {
-        navigate({ to: '/login' })
-        return
-      }
-      toast.error('AI response failed. Please try again.')
+      toast.error('AI error. Try again.')
       setStreamingContent('')
     } finally {
       setIsStreaming(false)
     }
-  }, [user, isStreaming, activeChatId, messages, balance, deductTokens, fetchBalance, navigate])
+  }, [user, isStreaming, activeChatId, messages, balance, deductTokens, fetchBalance, selectedModel])
 
-  if (authLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl btn-glow flex items-center justify-center animate-pulse-glow">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <p className="text-muted-foreground text-sm">Loading...</p>
-        </div>
-      </div>
-    )
-  }
+  if (authLoading) return null
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar — desktop */}
-      <div className={`hidden lg:block transition-all duration-300 shrink-0 ${sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
-        <ChatSidebar
-          chats={chats}
-          activeChatId={activeChatId}
-          onNewChat={handleNewChat}
-          onSelectChat={handleSelectChat}
-          onDeleteChat={handleDeleteChat}
-          onRenameChat={handleRenameChat}
-          tokenBalance={balance?.tokens || 0}
-        />
-      </div>
+    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+      <ChatSidebar
+        chats={chats}
+        activeChatId={activeChatId}
+        onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+        onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
+        tokenBalance={balance?.tokens || 0}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
 
-      {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-screen min-w-0">
+      <div className="flex-1 flex flex-col relative min-w-0">
         {/* Header */}
-        <div className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0">
-          <div className="flex items-center gap-3">
-            <button
+        <header className="h-16 border-b border-border/50 flex items-center justify-between px-4 md:px-6 shrink-0 z-10 glass backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              className="lg:hidden p-2 rounded-xl hover:bg-secondary transition-all"
             >
-              <div className="space-y-1">
-                <span className="block w-4 h-0.5 bg-current rounded" />
-                <span className="block w-4 h-0.5 bg-current rounded" />
-                <span className="block w-3 h-0.5 bg-current rounded" />
-              </div>
+              <Menu className="w-5 h-5" />
             </button>
-            <span className="text-sm font-medium text-muted-foreground truncate max-w-48">
-              {activeChatId ? chats.find(c => c.id === activeChatId)?.title || 'Chat' : 'New Chat'}
-            </span>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-secondary transition-all text-sm font-bold tracking-tight">
+                  <span className="text-muted-foreground">Model:</span>
+                  <span className="text-foreground">{selectedModel.name}</span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64 glass-dark p-2 border-border/40 rounded-2xl shadow-2xl">
+                <DropdownMenuLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2 py-2">Select AI Model</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-border/40 mx-1" />
+                {AI_MODELS.filter(m => !m.isHidden).map((model) => (
+                  <DropdownMenuItem
+                    key={model.id}
+                    onClick={() => setSelectedModel(model)}
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer focus:bg-primary/10 focus:text-primary transition-all group"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-bold text-sm">{model.name}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase font-medium">{model.provider}</span>
+                    </div>
+                    {selectedModel.id === model.id && <Check className="w-4 h-4 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="token-badge flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs">
-              <Zap className="w-3 h-3 text-primary" />
-              <span className="font-semibold text-primary">{(balance?.tokens || 0).toLocaleString()}</span>
-              <span className="text-muted-foreground">tokens</span>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/50 text-xs font-bold text-primary bg-primary/5">
+              <Zap className="w-3 h-3" />
+              <span>{(balance?.tokens || 0).toLocaleString()}</span>
+            </div>
+            
+            <button 
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2.5 rounded-xl hover:bg-secondary transition-all border border-border/50 group"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 group-hover:rotate-12 transition-transform" /> : <Moon className="w-4 h-4 group-hover:-rotate-12 transition-transform" />}
+            </button>
+            
+            <button className="p-2.5 rounded-xl hover:bg-secondary transition-all border border-border/50 relative">
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
+            </button>
+
+            <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/20 cursor-pointer hover:scale-105 transition-transform overflow-hidden">
+              {user?.email?.[0]?.toUpperCase()}
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Messages area */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Chat Content */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden relative custom-scrollbar bg-background">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
+          
           {messages.length === 0 && !isStreaming ? (
-            <div className="flex flex-col items-center justify-center h-full px-4 py-12">
-              <div className="w-16 h-16 rounded-2xl btn-glow flex items-center justify-center mb-6 animate-pulse-glow">
-                <Sparkles className="w-8 h-8 text-white" />
+            <div className="flex flex-col items-center justify-center min-h-full py-12 md:py-20 relative px-4">
+              <div className="w-20 h-20 rounded-[2rem] btn-glow flex items-center justify-center mb-8 animate-pulse-glow shadow-2xl">
+                <Sparkles className="w-10 h-10 text-white" />
               </div>
-              <h1 className="text-3xl font-bold mb-2 text-center">What can I help with?</h1>
-              <p className="text-muted-foreground text-sm mb-10 text-center max-w-sm">Start a conversation or try one of these prompts</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
-                {STARTERS.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSend(s.text)}
-                    className={`flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary text-left transition-all group animate-fade-in stagger-${i + 1}`}
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
-                      <s.icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{s.text}</span>
-                  </button>
-                ))}
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-center max-w-2xl bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
+                The future of intelligence is here
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground/60 mb-12 text-center max-w-md font-medium tracking-tight">
+                NexusAI combines the worlds best models into a single, high-fidelity interface.
+              </p>
+              
+              <div className="flex items-center gap-4 mb-16 animate-fade-in stagger-2 opacity-60">
+                <Check className="w-4 h-4 text-primary" /> <span className="text-xs font-bold uppercase tracking-widest">Multi-Model</span>
+                <div className="w-1 h-1 rounded-full bg-border" />
+                <Check className="w-4 h-4 text-primary" /> <span className="text-xs font-bold uppercase tracking-widest">Privacy First</span>
+                <div className="w-1 h-1 rounded-full bg-border" />
+                <Check className="w-4 h-4 text-primary" /> <span className="text-xs font-bold uppercase tracking-widest">High Speed</span>
+              </div>
+
+              <div className="w-full max-w-4xl opacity-90">
+                <AssistantGrid onSelect={(id) => handleSend(`Tell me more about the ${id} feature`)} />
+                <ToolGrid onSelect={(id) => handleSend(`How do I use the ${id} tool?`)} />
               </div>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 space-y-10">
               {messages.map(msg => (
                 <MessageBubble key={msg.id} message={msg} userEmail={user?.email} />
               ))}
               {isStreaming && (
                 streamingContent ? (
-                  <div className="flex gap-3 animate-fade-in">
-                    <div className="w-8 h-8 rounded-xl btn-glow flex items-center justify-center shrink-0">
-                      <Sparkles className="w-4 h-4 text-white" />
+                  <div className="flex gap-4 md:gap-6 animate-fade-in group">
+                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-2xl btn-glow flex items-center justify-center shrink-0 shadow-lg">
+                      <Sparkles className="w-5 h-5 text-white" />
                     </div>
-                    <div className="message-assistant rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed max-w-[75%]">
-                      <p className="whitespace-pre-wrap">{streamingContent}</p>
-                      <span className="inline-block w-0.5 h-4 bg-primary ml-0.5 animate-pulse" />
+                    <div className="flex-1 min-w-0 pt-1">
+                      <div className="text-base leading-relaxed text-foreground/90 prose prose-invert max-w-none prose-p:leading-relaxed">
+                        <p className="whitespace-pre-wrap">{streamingContent}</p>
+                        <span className="inline-block w-1.5 h-5 bg-primary ml-1 align-middle animate-pulse rounded-full" />
+                      </div>
                     </div>
                   </div>
                 ) : (
                   <TypingIndicator />
                 )
               )}
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} className="h-12" />
             </div>
           )}
-        </div>
+        </main>
 
-        {/* Input */}
-        <div className="shrink-0">
+        {/* Fixed Input Area */}
+        <div className="shrink-0 bg-gradient-to-t from-background via-background/95 to-transparent pt-8">
           <ChatInput
             onSend={handleSend}
             isLoading={isStreaming}
             tokenBalance={balance?.tokens || 0}
+            modelName={selectedModel.name}
           />
         </div>
       </div>
