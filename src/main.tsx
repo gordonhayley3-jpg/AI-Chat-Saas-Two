@@ -19,18 +19,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         position="top-right"
         toastOptions={{
           style: {
-            background: 'hsl(252 22% 11%)',
-            color: 'hsl(252 15% 92%)',
-            border: '1px solid hsl(252 18% 18%)',
+            background: '#1a1a1a',
+            color: '#e5e5e5',
+            border: '1px solid #2a2a2a',
             borderRadius: '12px',
-            fontSize: '14px',
-            fontFamily: 'Space Grotesk, system-ui, sans-serif',
+            fontSize: '13px',
+            fontFamily: 'Inter, system-ui, sans-serif',
           },
           success: {
-            iconTheme: { primary: 'hsl(257 93% 68%)', secondary: 'white' },
+            iconTheme: { primary: '#6366f1', secondary: 'white' },
           },
           error: {
-            iconTheme: { primary: 'hsl(0 72% 55%)', secondary: 'white' },
+            iconTheme: { primary: '#ef4444', secondary: 'white' },
           },
         }}
       />

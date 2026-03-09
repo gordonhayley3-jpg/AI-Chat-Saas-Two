@@ -53,9 +53,12 @@ export interface TokenPackage {
 export interface AIModel {
   id: string
   name: string
-  provider: 'google' | 'openai' | 'deepseek' | 'hidden'
-  icon?: string
-  inputPrice: number // tokens per message or similar metric
+  provider: 'google' | 'openai' | 'deepseek' | 'anthropic' | 'hidden'
+  description?: string
+  category?: 'text' | 'image' | 'code'
+  isFree?: boolean
+  hasReasoning?: boolean
+  inputPrice: number
   outputPrice: number
   contextLimit: number
   isHidden?: boolean

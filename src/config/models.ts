@@ -1,22 +1,54 @@
-import { AIModel } from '../types'
+export interface ModelInfo {
+  id: string
+  name: string
+  provider: 'openai' | 'google' | 'deepseek' | 'anthropic'
+  description: string
+  category: 'text' | 'image' | 'code'
+  isFree: boolean
+  hasReasoning?: boolean
+  inputPrice: number   // tokens per 1k chars
+  outputPrice: number
+  contextLimit: number
+  isEnabled: boolean
+  isHidden?: boolean
+}
 
-export const AI_MODELS: AIModel[] = [
-  // Google Models
+export const AI_MODELS: ModelInfo[] = [
+  // === FREE MODELS (prioritized) ===
+  {
+    id: 'deepseek-v3',
+    name: 'DeepSeek V3',
+    provider: 'deepseek',
+    description: 'Бесплатная',
+    category: 'text',
+    isFree: true,
+    inputPrice: 0,
+    outputPrice: 0,
+    contextLimit: 64000,
+    isEnabled: true,
+  },
+  {
+    id: 'deepseek-r1',
+    name: 'DeepSeek R1',
+    provider: 'deepseek',
+    description: 'С размышлениями',
+    category: 'text',
+    isFree: true,
+    hasReasoning: true,
+    inputPrice: 0,
+    outputPrice: 0,
+    contextLimit: 64000,
+    isEnabled: true,
+  },
   {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
     provider: 'google',
-    inputPrice: 1,
-    outputPrice: 2,
-    contextLimit: 1000000,
-    isEnabled: true,
-  },
-  {
-    id: 'gemini-1.5-flash',
-    name: 'Gemini 1.5 Flash',
-    provider: 'google',
-    inputPrice: 1,
-    outputPrice: 2,
+    description: 'Бесплатная от Google',
+    category: 'text',
+    isFree: true,
+    inputPrice: 0,
+    outputPrice: 0,
     contextLimit: 1000000,
     isEnabled: true,
   },
@@ -24,71 +56,22 @@ export const AI_MODELS: AIModel[] = [
     id: 'gemini-1.5-pro',
     name: 'Gemini 1.5 Pro',
     provider: 'google',
+    description: 'Продвинутая',
+    category: 'text',
+    isFree: false,
     inputPrice: 5,
     outputPrice: 10,
     contextLimit: 2000000,
     isEnabled: true,
   },
-  // DeepSeek Models
-  {
-    id: 'deepseek-r1',
-    name: 'DeepSeek R1',
-    provider: 'deepseek',
-    inputPrice: 2,
-    outputPrice: 4,
-    contextLimit: 64000,
-    isEnabled: true,
-  },
-  {
-    id: 'deepseek-v3',
-    name: 'DeepSeek V3',
-    provider: 'deepseek',
-    inputPrice: 1,
-    outputPrice: 2,
-    contextLimit: 64000,
-    isEnabled: true,
-  },
-  // OpenAI Models
-  {
-    id: 'o3-mini',
-    name: 'o3-mini',
-    provider: 'openai',
-    inputPrice: 3,
-    outputPrice: 6,
-    contextLimit: 128000,
-    isEnabled: true,
-  },
-  {
-    id: 'o1',
-    name: 'o1',
-    provider: 'openai',
-    inputPrice: 10,
-    outputPrice: 20,
-    contextLimit: 128000,
-    isEnabled: true,
-  },
-  {
-    id: 'o1-mini',
-    name: 'o1-mini',
-    provider: 'openai',
-    inputPrice: 5,
-    outputPrice: 10,
-    contextLimit: 128000,
-    isEnabled: true,
-  },
-  {
-    id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
-    provider: 'openai',
-    inputPrice: 10,
-    outputPrice: 30,
-    contextLimit: 128000,
-    isEnabled: true,
-  },
+  // === PAID MODELS ===
   {
     id: 'gpt-4o',
     name: 'GPT-4o',
     provider: 'openai',
+    description: 'Быстрая и умная',
+    category: 'text',
+    isFree: false,
     inputPrice: 5,
     outputPrice: 15,
     contextLimit: 128000,
@@ -98,61 +81,50 @@ export const AI_MODELS: AIModel[] = [
     id: 'gpt-4o-mini',
     name: 'GPT-4o mini',
     provider: 'openai',
+    description: 'Экономичная',
+    category: 'text',
+    isFree: false,
     inputPrice: 1,
     outputPrice: 2,
     contextLimit: 128000,
     isEnabled: true,
   },
   {
-    id: 'gpt-4',
-    name: 'GPT-4',
-    provider: 'openai',
-    inputPrice: 30,
-    outputPrice: 60,
-    contextLimit: 8192,
-    isEnabled: true,
-  },
-  {
-    id: 'gpt-3.5-turbo',
-    name: 'GPT-3.5 Turbo',
-    provider: 'openai',
-    inputPrice: 1,
-    outputPrice: 2,
-    contextLimit: 16385,
-    isEnabled: true,
-  },
-  // Hidden Placeholders (Zveno list)
-  {
     id: 'claude-3-5-sonnet',
     name: 'Claude 3.5 Sonnet',
-    provider: 'hidden',
+    provider: 'anthropic',
+    description: 'Премиум',
+    category: 'text',
+    isFree: false,
     inputPrice: 3,
     outputPrice: 15,
     contextLimit: 200000,
-    isHidden: true,
-    isEnabled: false,
+    isEnabled: true,
   },
+  // === IMAGE MODELS ===
   {
-    id: 'claude-3-opus',
-    name: 'Claude 3 Opus',
-    provider: 'hidden',
-    inputPrice: 15,
-    outputPrice: 75,
-    contextLimit: 200000,
-    isHidden: true,
-    isEnabled: false,
-  },
-  {
-    id: 'mistral-large',
-    name: 'Mistral Large',
-    provider: 'hidden',
-    inputPrice: 4,
-    outputPrice: 12,
-    contextLimit: 32000,
-    isHidden: true,
-    isEnabled: false,
+    id: 'dall-e-3',
+    name: 'DALL-E 3',
+    provider: 'openai',
+    description: 'Генерация изображений',
+    category: 'image',
+    isFree: false,
+    inputPrice: 40,
+    outputPrice: 40,
+    contextLimit: 4096,
+    isEnabled: true,
   },
 ]
 
-export const DEFAULT_MODEL_ID = 'gemini-1.5-flash'
-export const FALLBACK_MODEL_ID = 'gpt-4o-mini'
+export const DEFAULT_MODEL_ID = 'deepseek-v3'
+export const FALLBACK_MODEL_ID = 'gemini-2.0-flash'
+
+export const PROVIDER_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  google: 'Google',
+  deepseek: 'DeepSeek',
+  anthropic: 'Anthropic',
+}
+
+// Legacy AIModel type alias
+export type AIModel = ModelInfo

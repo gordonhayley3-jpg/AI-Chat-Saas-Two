@@ -1,20 +1,17 @@
-import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet, redirect } from '@tanstack/react-router'
-import LandingPage from './pages/LandingPage'
-import AuthPage from './pages/AuthPage'
+import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet } from '@tanstack/react-router'
 import ChatPage from './pages/ChatPage'
-import DashboardPage from './pages/DashboardPage'
+import AuthPage from './pages/AuthPage'
+import BotsPage from './pages/BotsPage'
+import SettingsPage from './pages/SettingsPage'
 import AdminPage from './pages/AdminPage'
 
-// Root route
-const rootRoute = createRootRoute({
-  component: () => <Outlet />,
-})
+const rootRoute = createRootRoute({ component: () => <Outlet /> })
 
-// Routes
+// '/' = Chat (main page)
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: LandingPage,
+  component: ChatPage,
 })
 
 const loginRoute = createRoute({
@@ -23,6 +20,13 @@ const loginRoute = createRoute({
   component: () => <AuthPage mode="login" />,
 })
 
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  component: () => <AuthPage mode="signup" />,
+})
+
+// Legacy routes
 const signupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/signup',
@@ -35,16 +39,16 @@ const resetPasswordRoute = createRoute({
   component: () => <AuthPage mode="reset" />,
 })
 
-const chatRoute = createRoute({
+const botsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/chat',
-  component: ChatPage,
+  path: '/bots',
+  component: BotsPage,
 })
 
-const dashboardRoute = createRoute({
+const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/dashboard',
-  component: DashboardPage,
+  path: '/settings',
+  component: SettingsPage,
 })
 
 const adminRoute = createRoute({
@@ -56,10 +60,11 @@ const adminRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
+  registerRoute,
   signupRoute,
   resetPasswordRoute,
-  chatRoute,
-  dashboardRoute,
+  botsRoute,
+  settingsRoute,
   adminRoute,
 ])
 
