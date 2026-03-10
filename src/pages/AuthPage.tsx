@@ -59,28 +59,35 @@ export default function AuthPage({ mode }: AuthPageProps) {
   }
 
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-[#0f0f0f]">
-      <div className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+    <div className="flex h-screen items-center justify-center">
+      <div className="w-5 h-5 rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent animate-spin" />
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm animate-fade-in-up">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-indigo-400" />
+          <div className="w-9 h-9 rounded-xl bg-[hsl(var(--primary)/0.15)] border border-[hsl(var(--primary)/0.25)] flex items-center justify-center">
+            <Bot className="w-5 h-5 text-[hsl(var(--primary))]" />
           </div>
-          <span className="font-semibold text-lg text-white">NexusAI</span>
+          <span className="font-semibold text-lg">NexusAI</span>
+        </div>
+
+        {/* Bonus badge */}
+        <div className="flex justify-center mb-5">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-500 text-sm font-semibold">
+            40+ За регистрацию
+          </span>
         </div>
 
         {/* Card */}
-        <div className="bg-[#141414] border border-[#222] rounded-2xl p-7 shadow-2xl">
-          <h1 className="text-xl font-semibold text-white mb-1.5">
+        <div className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-2xl p-7 shadow-xl">
+          <h1 className="text-xl font-semibold mb-1.5">
             {mode === 'login' ? 'Войти в аккаунт' : mode === 'signup' ? 'Создать аккаунт' : 'Сброс пароля'}
           </h1>
-          <p className="text-sm text-[#666] mb-6">
+          <p className="text-sm text-[hsl(var(--muted-foreground))] mb-6">
             {mode === 'login'
               ? 'Введите email и пароль для входа'
               : mode === 'signup'
@@ -92,11 +99,11 @@ export default function AuthPage({ mode }: AuthPageProps) {
           {resetSent ? (
             <div className="text-center py-4">
               <div className="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-6 h-6 text-green-400" />
+                <Mail className="w-6 h-6 text-green-500" />
               </div>
-              <p className="text-sm text-[#aaa]">Письмо отправлено на <strong className="text-white">{email}</strong></p>
-              <p className="text-xs text-[#555] mt-2">Проверьте папку «Спам», если не видите письмо</p>
-              <Link to="/login" className="block mt-5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+              <p className="text-sm">Письмо отправлено на <strong>{email}</strong></p>
+              <p className="text-xs text-[hsl(var(--muted-foreground))] mt-2">Проверьте папку «Спам», если не видите письмо</p>
+              <Link to="/login" className="block mt-5 text-sm text-[hsl(var(--primary))] hover:opacity-80 transition-colors">
                 ← Вернуться ко входу
               </Link>
             </div>
@@ -104,40 +111,40 @@ export default function AuthPage({ mode }: AuthPageProps) {
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'signup' && (
                 <div>
-                  <label className="block text-xs font-medium text-[#888] mb-1.5">Имя (необязательно)</label>
+                  <label className="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1.5">Имя (необязательно)</label>
                   <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
                     <input
                       type="text"
                       value={name}
                       onChange={e => setName(e.target.value)}
                       placeholder="Ваше имя"
-                      className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl pl-10 pr-4 py-3 text-sm text-[#e5e5e5] placeholder:text-[#444] outline-none focus:border-indigo-500/50 transition-colors"
+                      className="w-full bg-[hsl(var(--background))] border border-[hsl(var(--border))] rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-[hsl(var(--muted-foreground))] outline-none focus:border-[hsl(var(--primary)/0.5)] transition-colors"
                     />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-medium text-[#888] mb-1.5">Email</label>
+                <label className="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1.5">E-mail</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
-                    className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl pl-10 pr-4 py-3 text-sm text-[#e5e5e5] placeholder:text-[#444] outline-none focus:border-indigo-500/50 transition-colors"
+                    className="w-full bg-[hsl(var(--background))] border border-[hsl(var(--border))] rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-[hsl(var(--muted-foreground))] outline-none focus:border-[hsl(var(--primary)/0.5)] transition-colors"
                   />
                 </div>
               </div>
 
               {mode !== 'reset' && (
                 <div>
-                  <label className="block text-xs font-medium text-[#888] mb-1.5">Пароль</label>
+                  <label className="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1.5">Пароль</label>
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
                     <input
                       type={showPass ? 'text' : 'password'}
                       value={password}
@@ -145,9 +152,9 @@ export default function AuthPage({ mode }: AuthPageProps) {
                       placeholder={mode === 'signup' ? 'Минимум 8 символов' : '••••••••'}
                       required
                       minLength={mode === 'signup' ? 8 : undefined}
-                      className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl pl-10 pr-11 py-3 text-sm text-[#e5e5e5] placeholder:text-[#444] outline-none focus:border-indigo-500/50 transition-colors"
+                      className="w-full bg-[hsl(var(--background))] border border-[hsl(var(--border))] rounded-xl pl-10 pr-11 py-3 text-sm placeholder:text-[hsl(var(--muted-foreground))] outline-none focus:border-[hsl(var(--primary)/0.5)] transition-colors"
                     />
-                    <button type="button" onClick={() => setShowPass(o => !o)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#555] hover:text-[#aaa] transition-colors">
+                    <button type="button" onClick={() => setShowPass(o => !o)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors">
                       {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
@@ -156,7 +163,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
 
               {mode === 'login' && (
                 <div className="flex justify-end">
-                  <Link to="/reset-password" className="text-xs text-[#666] hover:text-indigo-400 transition-colors">
+                  <Link to="/reset-password" className="text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] transition-colors">
                     Забыли пароль?
                   </Link>
                 </div>
@@ -177,14 +184,14 @@ export default function AuthPage({ mode }: AuthPageProps) {
 
         {/* Switch mode */}
         {mode !== 'reset' && !resetSent && (
-          <p className="text-center text-sm text-[#666] mt-5">
+          <p className="text-center text-sm text-[hsl(var(--muted-foreground))] mt-5">
             {mode === 'login' ? (
               <>Нет аккаунта?{' '}
-                <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">Зарегистрироваться</Link>
+                <Link to="/register" className="text-[hsl(var(--primary))] hover:opacity-80 font-medium transition-colors">Зарегистрироваться</Link>
               </>
             ) : (
               <>Уже есть аккаунт?{' '}
-                <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">Войти</Link>
+                <Link to="/login" className="text-[hsl(var(--primary))] hover:opacity-80 font-medium transition-colors">Войти</Link>
               </>
             )}
           </p>

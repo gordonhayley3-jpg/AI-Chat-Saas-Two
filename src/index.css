@@ -4,47 +4,47 @@
 
 @layer base {
   :root {
-    /* Minimalist dark theme — #0f0f0f base, indigo accent */
-    --background: 0 0% 6%;           /* #0f0f0f */
-    --foreground: 0 0% 90%;          /* #e5e5e5 */
-    --card: 0 0% 10%;                /* #1a1a1a */
-    --card-foreground: 0 0% 90%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 90%;
-    --primary: 239 84% 67%;          /* #6366f1 indigo */
+    /* Light theme — white base, soft indigo accent (like umnik.ai) */
+    --background: 228 25% 98%;        /* #f8f9fc */
+    --foreground: 224 20% 15%;        /* #1f2937 */
+    --card: 0 0% 100%;                /* #ffffff */
+    --card-foreground: 224 20% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 20% 15%;
+    --primary: 239 84% 67%;           /* #6366f1 indigo */
     --primary-foreground: 0 0% 100%;
     --primary-glow: 239 84% 75%;
-    --secondary: 0 0% 13%;           /* #212121 */
-    --secondary-foreground: 0 0% 75%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 50%;
-    --accent: 239 75% 72%;           /* slightly lighter indigo */
+    --secondary: 228 14% 95%;         /* #eff1f5 */
+    --secondary-foreground: 224 20% 40%;
+    --muted: 228 14% 93%;
+    --muted-foreground: 224 10% 55%;
+    --accent: 239 75% 72%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 16%;              /* #2a2a2a */
-    --input: 0 0% 12%;
+    --border: 228 14% 90%;            /* #e2e5eb */
+    --input: 228 14% 93%;
     --ring: 239 84% 67%;
 
-    --sidebar: 0 0% 8%;              /* #141414 */
-    --sidebar-foreground: 0 0% 85%;
+    --sidebar: 228 20% 97%;           /* light sidebar */
+    --sidebar-foreground: 224 20% 25%;
     --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 13%;
-    --sidebar-accent-foreground: 0 0% 75%;
-    --sidebar-border: 0 0% 14%;
+    --sidebar-accent: 228 14% 95%;
+    --sidebar-accent-foreground: 224 20% 40%;
+    --sidebar-border: 228 14% 91%;
     --sidebar-ring: 239 84% 67%;
 
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
-    --shadow-glow: 0 0 24px hsl(239 84% 67% / 0.2);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+    --shadow-glow: 0 0 24px hsl(239 84% 67% / 0.15);
 
     --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(260 75% 70%));
-    --gradient-subtle: linear-gradient(135deg, hsl(0 0% 12%), hsl(0 0% 15%));
+    --gradient-subtle: linear-gradient(135deg, hsl(228 14% 95%), hsl(228 14% 98%));
 
     --transition-fast: all 0.15s ease;
     --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -52,6 +52,47 @@
 
     --radius: 0.75rem;
     --spacing: 0.25rem;
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 240 10% 5%;          /* #0f0f14 */
+    --foreground: 0 0% 90%;           /* #e5e5e5 */
+    --card: 240 10% 10%;              /* #1a1a24 */
+    --card-foreground: 0 0% 90%;
+    --popover: 240 10% 10%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 239 84% 75%;
+    --secondary: 240 10% 14%;
+    --secondary-foreground: 0 0% 75%;
+    --muted: 240 10% 12%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 239 75% 72%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 10% 18%;
+    --input: 240 10% 12%;
+    --ring: 239 84% 67%;
+
+    --sidebar: 240 10% 7%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 14%;
+    --sidebar-accent-foreground: 0 0% 75%;
+    --sidebar-border: 240 10% 14%;
+    --sidebar-ring: 239 84% 67%;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
+    --shadow-glow: 0 0 24px hsl(239 84% 67% / 0.2);
+
+    --gradient-subtle: linear-gradient(135deg, hsl(240 10% 12%), hsl(240 10% 15%));
+    color-scheme: dark;
   }
 
   * {
@@ -73,8 +114,8 @@
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(0 0% 20%); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 28%); }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.3); }
 }
 
 /* ========= UTILITIES ========= */
@@ -163,7 +204,7 @@
 
 /* Reasoning block */
 .reasoning-block {
-  background: #1e1e2e;
+  background: hsl(var(--muted));
   border-left: 3px solid hsl(var(--primary));
   border-radius: 0 8px 8px 0;
   animation: reasoning-expand 0.3s ease-out both;
@@ -185,6 +226,22 @@
 }
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Tariff button (gradient indigo) */
+.btn-tariff {
+  background: var(--gradient-primary);
+  color: white;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 28px;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 20px hsl(var(--primary) / 0.3);
+}
+.btn-tariff:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px hsl(var(--primary) / 0.4);
+}
 
 /* Ghost button */
 .btn-ghost {
@@ -225,7 +282,7 @@
 
 /* Code block */
 .code-block {
-  background: #111111;
+  background: hsl(var(--muted));
   border: 1px solid hsl(var(--border));
   border-radius: 10px;
   font-family: var(--font-mono);
@@ -241,7 +298,7 @@
 
 /* Skeleton shimmer */
 .skeleton {
-  background: linear-gradient(90deg, hsl(0 0% 12%) 25%, hsl(0 0% 16%) 50%, hsl(0 0% 12%) 75%);
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--border)) 50%, hsl(var(--muted)) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 6px;
@@ -249,7 +306,7 @@
 
 /* Modal backdrop */
 .modal-backdrop {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease-out both;
 }
@@ -257,6 +314,18 @@
 /* Modal content */
 .modal-content {
   animation: scaleIn 0.2s ease-out both;
+}
+
+/* Token price badge */
+.badge-token {
+  color: hsl(142 71% 40%);
+  font-size: 14px;
+  font-weight: 700;
+}
+.badge-token::after {
+  content: ' +';
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 /* Free badge */
@@ -279,6 +348,40 @@
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 6px;
+}
+
+/* Theme toggle */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+.theme-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+}
+.theme-toggle-btn.active {
+  background: hsl(45 93% 55%);
+  color: hsl(0 0% 10%);
+  box-shadow: 0 2px 8px hsl(45 93% 50% / 0.3);
+}
+.dark .theme-toggle-btn.active {
+  background: hsl(220 14% 40%);
+  color: hsl(0 0% 95%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* Prose */
@@ -306,7 +409,41 @@
 .card-hover:hover {
   border-color: hsl(var(--primary) / 0.35);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-md);
+}
+
+/* Model card selected state */
+.model-card-selected {
+  border-color: hsl(var(--primary) / 0.5) !important;
+  background: hsl(var(--primary) / 0.05);
+}
+
+/* Sidebar collapse transition */
+.sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Filter pill */
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+.filter-pill.active {
+  background: hsl(var(--primary));
+  color: white;
+}
+.filter-pill:not(.active) {
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+}
+.filter-pill:not(.active):hover {
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground));
 }
 
 @media (prefers-reduced-motion: reduce) {

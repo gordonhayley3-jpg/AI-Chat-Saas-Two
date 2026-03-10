@@ -6,12 +6,40 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, content-type",
 };
 
+// Retry helper with exponential backoff for 429 errors
+async function retryFetch(fn: () => Promise<Response>, maxRetries = 3): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const res = await fn();
+    if (res.status === 429 && attempt < maxRetries - 1) {
+      const retryAfter = res.headers.get("retry-after");
+      const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt + 1) * 1000;
+      console.log(`Rate limited (429), retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+      await new Promise(r => setTimeout(r, delay));
+      continue;
+    }
+    return res;
+  }
+  throw new Error("Max retries exceeded");
+}
+
 // Model routing: which API to call for each model ID
 const MODEL_CONFIG: Record<string, { provider: string; apiModel: string; isFree?: boolean; hasReasoning?: boolean }> = {
+  // New umnik-style model IDs -> actual API models
+  "chatgpt-5.4-pro": { provider: "openai", apiModel: "gpt-4o" },
+  "chatgpt-5.4": { provider: "openai", apiModel: "gpt-4o" },
+  "chatgpt-5.3": { provider: "openai", apiModel: "gpt-4o-mini" },
+  "chatgpt-5.2-pro": { provider: "openai", apiModel: "gpt-4o" },
+  "chatgpt-5.2": { provider: "openai", apiModel: "gpt-4o-mini" },
+  "claude-opus-4.5": { provider: "anthropic", apiModel: "claude-3-5-sonnet-20241022" },
+  "claude-sonnet-4.5": { provider: "anthropic", apiModel: "claude-3-5-sonnet-20241022" },
+  "gemini-3-pro": { provider: "google", apiModel: "gemini-1.5-pro" },
+  "gemini-3-flash": { provider: "google", apiModel: "gemini-2.0-flash", isFree: true },
+  "deepseek-v3": { provider: "deepseek", apiModel: "deepseek-chat", isFree: true },
+  "grok-4": { provider: "openai", apiModel: "gpt-4o" }, // fallback to openai
+  // Legacy IDs
   "gemini-2.0-flash": { provider: "google", apiModel: "gemini-2.0-flash", isFree: true },
   "gemini-1.5-flash": { provider: "google", apiModel: "gemini-1.5-flash", isFree: true },
   "gemini-1.5-pro": { provider: "google", apiModel: "gemini-1.5-pro" },
-  "deepseek-v3": { provider: "deepseek", apiModel: "deepseek-chat", isFree: true },
   "deepseek-r1": { provider: "deepseek", apiModel: "deepseek-reasoner", isFree: true, hasReasoning: true },
   "gpt-4o": { provider: "openai", apiModel: "gpt-4o" },
   "gpt-4o-mini": { provider: "openai", apiModel: "gpt-4o-mini" },
@@ -20,113 +48,125 @@ const MODEL_CONFIG: Record<string, { provider: string; apiModel: string; isFree?
   "claude-3-5-sonnet": { provider: "anthropic", apiModel: "claude-3-5-sonnet-20241022" },
   "o3-mini": { provider: "openai", apiModel: "o3-mini" },
   "dall-e-3": { provider: "openai", apiModel: "dall-e-3" },
+  // Video/image models -> not real API, return placeholder
+  "kling-2.6-motion": { provider: "openai", apiModel: "gpt-4o-mini" },
+  "kling-v3-motion": { provider: "openai", apiModel: "gpt-4o-mini" },
+  "kling-2.6-text": { provider: "openai", apiModel: "gpt-4o-mini" },
+  "kling-2.6-image": { provider: "openai", apiModel: "gpt-4o-mini" },
+  "nano-banana-edit": { provider: "openai", apiModel: "gpt-4o-mini" },
 };
 
 async function callOpenAI(apiKey: string, model: string, messages: any[], stream: boolean): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000);
-  
-  try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, messages, stream, max_tokens: 4096 }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    return res;
-  } catch (e) {
-    clearTimeout(timeout);
-    throw e;
-  }
+  return retryFetch(async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, messages, stream, max_tokens: 4096 }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return res;
+    } catch (e) {
+      clearTimeout(timeout);
+      throw e;
+    }
+  });
 }
 
 async function callDeepSeek(apiKey: string, model: string, messages: any[], stream: boolean): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000);
-  
-  try {
-    const res = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, messages, stream, max_tokens: 4096 }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    return res;
-  } catch (e) {
-    clearTimeout(timeout);
-    throw e;
-  }
+  return retryFetch(async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    try {
+      const res = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, messages, stream, max_tokens: 4096 }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return res;
+    } catch (e) {
+      clearTimeout(timeout);
+      throw e;
+    }
+  });
 }
 
 async function callGoogle(apiKey: string, model: string, messages: any[], stream: boolean): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000);
-  
-  // Convert OpenAI-style messages to Google format
-  const systemMsg = messages.find(m => m.role === 'system');
-  const convMessages = messages.filter(m => m.role !== 'system');
-  
-  const contents = convMessages.map(m => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }]
-  }));
-  
-  const body: any = { contents };
-  if (systemMsg) {
-    body.systemInstruction = { parts: [{ text: systemMsg.content }] };
-  }
-  
-  const endpoint = stream 
-    ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`
-    : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    return res;
-  } catch (e) {
-    clearTimeout(timeout);
-    throw e;
-  }
+  return retryFetch(async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    
+    // Convert OpenAI-style messages to Google format
+    const systemMsg = messages.find(m => m.role === 'system');
+    const convMessages = messages.filter(m => m.role !== 'system');
+    
+    const contents = convMessages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+    
+    const body: any = { contents };
+    if (systemMsg) {
+      body.systemInstruction = { parts: [{ text: systemMsg.content }] };
+    }
+    
+    const endpoint = stream 
+      ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`
+      : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return res;
+    } catch (e) {
+      clearTimeout(timeout);
+      throw e;
+    }
+  });
 }
 
 async function callAnthropic(apiKey: string, model: string, messages: any[], stream: boolean): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000);
-  
-  const systemMsg = messages.find(m => m.role === 'system')?.content;
-  const convMessages = messages.filter(m => m.role !== 'system');
-  
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: convMessages,
-        max_tokens: 4096,
-        ...(systemMsg ? { system: systemMsg } : {}),
-        stream,
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    return res;
-  } catch (e) {
-    clearTimeout(timeout);
-    throw e;
-  }
+  return retryFetch(async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    
+    const systemMsg = messages.find(m => m.role === 'system')?.content;
+    const convMessages = messages.filter(m => m.role !== 'system');
+    
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: convMessages,
+          max_tokens: 4096,
+          ...(systemMsg ? { system: systemMsg } : {}),
+          stream,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return res;
+    } catch (e) {
+      clearTimeout(timeout);
+      throw e;
+    }
+  });
 }
 
 async function handler(req: Request): Promise<Response> {
